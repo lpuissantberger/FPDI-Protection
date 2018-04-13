@@ -15,7 +15,9 @@
  *                                                                           *
  ****************************************************************************/
 
-class FPDI_Protection extends FPDI
+namespace FpdiProtection;
+
+class FpdiProtection extends \FPDI
 {
     const CAN_PRINT = 4;
     const CAN_MODIFY = 8;
@@ -34,32 +36,38 @@ class FPDI_Protection extends FPDI
     protected $padding = "\x28\xBF\x4E\x5E\x4E\x75\x8A\x41\x64\x00\x4E\x56\xFF\xFA\x01\x08\x2E\x2E\x00\xB6\xD0\x68\x3E\x80\x2F\x0C\xA9\xFE\x64\x53\x69\x7A";
     protected $encryption_key;
 
+
     /**
      * Function to set permissions as well as user and owner passwords
      *
      * - permissions is an array with values taken from the following list:
      *   40bit:  copy, print, modify, annot-forms
+     *   128bit: fill-in, screenreaders, assemble, degraded-print
      *   If a value is present it means that the permission is granted
      * - If a user password is set, user will be prompted before document is opened
      * - If an owner password is set, document can be opened in privilege mode with no
      *   restriction if that password is entered
-     * @param int $permissions
-     * @param string $user_pass
-     * @param null $owner_pass
-     * @return null|string
      */
-    public function SetProtection($permissions = 0, $user_pass = '', $owner_pass = null)
+    public function fdpiSetProtection($permissions = array(), $user_pass = '', $owner_pass = null)
     {
-        $protection = 192 + $permissions;
-
+        $options = array(
+            'print' => self::CAN_PRINT,
+            'modify' => self::CAN_MODIFY,
+            'copy' => self::CAN_COPY,
+            'annot-forms' => self::CAN_ANNOT_FORMS
+        );
+        $protection = 192;
+        foreach ($permissions as $permission) {
+            if (!isset($options[$permission])) {
+                $this->Error('Incorrect permission: ' . $permission);
+            }
+            $protection += $options[$permission];
+        }
         if ($owner_pass === null) {
             $owner_pass = uniqid(rand());
         }
-
         $this->encrypted = true;
         $this->_generateencryptionkey($user_pass, $owner_pass, $protection);
-
-        return $owner_pass;
     }
 
     protected function _putstream($s)
@@ -139,7 +147,8 @@ class FPDI_Protection extends FPDI
      */
     protected function _RC4($key, $text)
     {
-        if (function_exists('mcrypt_decrypt') && $t = @mcrypt_decrypt(MCRYPT_ARCFOUR, $key, $text, MCRYPT_MODE_STREAM, '')) {
+        if (function_exists('mcrypt_decrypt') &&
+            $t = @mcrypt_decrypt(MCRYPT_ARCFOUR, $key, $text, MCRYPT_MODE_STREAM, '')) {
             return $t;
         }
 
@@ -232,14 +241,13 @@ class FPDI_Protection extends FPDI
                 }
                 break;
 
-            case pdf_parser::TYPE_STREAM :
+            case pdf_parser::TYPE_STREAM:
                 if ($this->encrypted) {
                     $value[2][1] = $this->_RC4($this->_objectkey($this->_currentObjId), $value[2][1]);
                 }
                 break;
 
-            case pdf_parser::TYPE_HEX :
-
+            case pdf_parser::TYPE_HEX:
                 if ($this->encrypted) {
                     $value[1] = $this->hex2str($value[1]);
                     $value[1] = $this->_RC4($this->_objectkey($this->_currentObjId), $value[1]);
@@ -295,8 +303,9 @@ class FPDI_Protection extends FPDI
                         $out .= chr(0x0A);
                         break;
                     case "\r":
-                        if ($count != $n - 1 && $s[$count + 1] == "\n")
+                        if ($count != $n - 1 && $s[$count + 1] == "\n") {
                             $count++;
+                        }
                         break;
                     case "\n":
                         break;

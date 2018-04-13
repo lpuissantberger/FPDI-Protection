@@ -1,5 +1,5 @@
 {
-  "name": "madnh/fpdi-protection",
+  "name": "lpuissantberger/fpdi-protection",
   "description": "Composer version of Setasign FPDI-Protection",
   "keywords": [
     "fpdi",
@@ -10,18 +10,17 @@
     "php": ">=5.3.0",
     "setasign/fpdi": "^1.6"
   },
-  "license": "Setasign FPDI-Protection",
   "type": "library",
-  "homepage": "https://github.com/madnh/FPDI-Protection",
+  "homepage": "https://github.com/lpuissantberger/FPDI-Protection",
   "autoload": {
     "classmap": [
-      "FPDI_Protection.php"
+      "FpdiProtection.php"
     ]
   },
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/madnh/FPDI-Protection"
+      "url": "https://github.com/lpuissantberger/FPDI-Protection"
     }
   ]
 }
