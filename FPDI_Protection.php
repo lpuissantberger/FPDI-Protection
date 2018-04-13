@@ -15,7 +15,9 @@
  *                                                                           *
  ****************************************************************************/
 
-class FPDI_Protection extends FPDI
+use
+
+class FPDI_Protection extends \FPDI
 {
     const CAN_PRINT = 4;
     const CAN_MODIFY = 8;
@@ -48,7 +50,7 @@ class FPDI_Protection extends FPDI
      * @param null $owner_pass
      * @return null|string
      */
-    public function SetProtection($permissions = 0, $user_pass = '', $owner_pass = null)
+    public function setProtection($permissions = 0, $user_pass = '', $owner_pass = null)
     {
         $protection = 192 + $permissions;
 
@@ -62,7 +64,7 @@ class FPDI_Protection extends FPDI
         return $owner_pass;
     }
 
-    protected function _putstream($s)
+    protected function putstream($s)
     {
         if ($this->encrypted) {
             $s = $this->_RC4($this->_objectkey($this->_currentObjId), $s);
@@ -70,7 +72,7 @@ class FPDI_Protection extends FPDI
         parent::_putstream($s);
     }
 
-    protected function _textstring($s)
+    protected function textstring($s)
     {
         if (!$this->_isascii($s)) {
             $s = $this->_UTF8toUTF16($s);
@@ -85,7 +87,7 @@ class FPDI_Protection extends FPDI
     /**
      * Compute key depending on object number where the encrypted data is stored
      */
-    protected function _objectkey($n)
+    protected function objectkey($n)
     {
         return substr($this->_md5_16($this->encryption_key . pack('VXxx', $n)), 0, 10);
     }
@@ -94,14 +96,16 @@ class FPDI_Protection extends FPDI
     /**
      * Escape special characters
      */
-    protected function _escape($s)
+    protected function escape($s)
     {
         return str_replace(
             array('\\', ')', '(', "\r", "\n", "\t"),
-            array('\\\\', '\\)', '\\(', '\\r', '\\n', '\\t'), $s);
+            array('\\\\', '\\)', '\\(', '\\r', '\\n', '\\t'),
+            $s
+        );
     }
 
-    protected function _putresources()
+    protected function putresources()
     {
         parent::_putresources();
         if ($this->encrypted) {
@@ -114,7 +118,7 @@ class FPDI_Protection extends FPDI
         }
     }
 
-    protected function _putencryption()
+    protected function putencryption()
     {
         $this->_out('/Filter /Standard');
         $this->_out('/V 1');
@@ -125,7 +129,7 @@ class FPDI_Protection extends FPDI
     }
 
 
-    protected function _puttrailer()
+    protected function puttrailer()
     {
         parent::_puttrailer();
         if ($this->encrypted) {
@@ -137,7 +141,7 @@ class FPDI_Protection extends FPDI
     /**
      * RC4 is the standard encryption algorithm used in PDF format
      */
-    protected function _RC4($key, $text)
+    protected function RC4($key, $text)
     {
         if (function_exists('mcrypt_decrypt') && $t = @mcrypt_decrypt(MCRYPT_ARCFOUR, $key, $text, MCRYPT_MODE_STREAM, '')) {
             return $t;
@@ -179,7 +183,7 @@ class FPDI_Protection extends FPDI
     /**
      * Get MD5 as binary string
      */
-    protected function _md5_16($string)
+    protected function md5_16($string)
     {
         return pack('H*', md5($string));
     }
@@ -187,7 +191,7 @@ class FPDI_Protection extends FPDI
     /**
      * Compute O value
      */
-    protected function _Ovalue($user_pass, $owner_pass)
+    protected function Ovalue($user_pass, $owner_pass)
     {
         $tmp = $this->_md5_16($owner_pass);
         $owner_RC4_key = substr($tmp, 0, 5);
@@ -197,7 +201,7 @@ class FPDI_Protection extends FPDI
     /**
      * Compute U value
      */
-    protected function _Uvalue()
+    protected function Uvalue()
     {
         return $this->_RC4($this->encryption_key, $this->padding);
     }
@@ -205,7 +209,7 @@ class FPDI_Protection extends FPDI
     /**
      * Compute encryption key
      */
-    protected function _generateencryptionkey($user_pass, $owner_pass, $protection)
+    protected function generateencryptionkey($user_pass, $owner_pass, $protection)
     {
         // Pad passwords
         $user_pass = substr($user_pass . $this->padding, 0, 32);
@@ -221,7 +225,7 @@ class FPDI_Protection extends FPDI
         $this->Pvalue = -(($protection ^ 255) + 1);
     }
 
-    protected function _writeValue(&$value)
+    protected function writeValue(&$value)
     {
         switch ($value[0]) {
             case pdf_parser::TYPE_STRING:
@@ -266,7 +270,7 @@ class FPDI_Protection extends FPDI
     /**
      * Deescape special characters
      */
-    protected function _unescape($s)
+    protected function unescape($s)
     {
         $out = '';
         for ($count = 0, $n = strlen($s); $count < $n; $count++) {

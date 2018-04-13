@@ -5,12 +5,12 @@ This script allows to protect the PDF, that is to say prevent people from copyin
 
 ## Install
 ```
-composer require madnh/fpdi-protection
+composer require lpuissantberger/fpdi-protection
 ```
 
 ## USAGE
 ```
-SetProtection([number permissions [, string user_pass [, string owner_pass]]])
+SetProtection([array permissions [, string user_pass [, string owner_pass]]])
 ```
 
 - permissions: the set of permissions. Empty by default (only viewing is allowed).
